@@ -338,7 +338,7 @@ code.inline { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; backg
 <div class="tip" id="tip" role="tooltip" hidden></div>
 <script src="data.js" data-dashboard-data></script>
 <script>
-(() => {
+window.startDashboard = () => {
   "use strict";
   const D = window.MOODLE_DASHBOARD;
   const app = document.getElementById("app");
@@ -464,7 +464,7 @@ code.inline { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; backg
     return `<span class="course">${esc(c.name)}</span>${code}`;
   }
   const isStaff = (e) => !!e.staff;
-  const author = (e) => (state.privacy && !isStaff(e) ? "A student" : e.author || "Someone");
+  const author = (e) => (state.privacy && !isStaff(e) ? "A student" : e.author || "A student");
 
   function prepActions() {
     const t = now();
@@ -1148,6 +1148,54 @@ code.inline { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; backg
     setInterval(tick, 1000);
     setInterval(render, 60000); // relative times, urgency colours, "past due" moves
   }
+};
+
+// Boot: data.js (local) wins; when hosted (e.g. Vercel) fetch live data from /api/data with an access key.
+(() => {
+  const app = document.getElementById("app");
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const KEY = "moodle-dash:key";
+  let memKey = "";
+  const getKey = () => { try { return localStorage.getItem(KEY) || memKey; } catch { return memKey; } };
+  const setKey = (k) => { memKey = k; try { localStorage.setItem(KEY, k); } catch { /* private mode */ } };
+  // A link like https://…/#key=… signs you in once; the key is then removed from the address bar.
+  const hashKey = new URLSearchParams(location.hash.slice(1)).get("key");
+  if (hashKey) { setKey(hashKey); history.replaceState(null, "", location.pathname + location.search); }
+
+  if (window.MOODLE_DASHBOARD || !/^https?:$/.test(location.protocol)) return window.startDashboard();
+
+  const logo = '<span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4.5" y="8" width="15" height="11" rx="3.5"/><path d="M12 4.5V8"/><circle cx="9.3" cy="13.3" r="1.5" fill="currentColor" stroke="none"/><circle cx="14.7" cy="13.3" r="1.5" fill="currentColor" stroke="none"/></svg></span>';
+  const card = (title, text, extra = "") => {
+    app.innerHTML = `<section class="card setup"><div class="brand" style="margin-bottom:14px">${logo}<div><div class="brand-name">Moodle Robot</div><div class="brand-sub">${esc(title)}</div></div></div>
+      <p style="color:var(--ink-2);margin:0">${esc(text)}</p>${extra}</section>`;
+  };
+  function keyForm(error) {
+    card("Locked", "Enter the access key you set as DASHBOARD_KEY in Vercel. It's remembered on this device.",
+      `<form id="keyform" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+        <input id="keyinput" type="password" autocomplete="current-password" placeholder="Access key" aria-label="Access key"
+          style="flex:1 1 220px;height:38px;border-radius:10px;border:0;padding:0 12px;font:inherit;background:var(--surface-2);color:var(--ink);box-shadow:0 0 0 1px var(--ring)">
+        <button class="btn" style="border:0;height:38px;cursor:pointer">Open dashboard</button></form>
+        ${error ? `<p style="color:var(--crit);margin:10px 0 0;font-size:13px">${esc(error)}</p>` : ""}`);
+    const input = document.getElementById("keyinput");
+    input.focus();
+    document.getElementById("keyform").addEventListener("submit", (ev) => { ev.preventDefault(); setKey(input.value.trim()); load(); });
+  }
+  async function load() {
+    card("Syncing with your inbox…", "Reading the latest Moodle Robot reports from Gmail. The first load can take a few seconds.");
+    let res;
+    try {
+      res = await fetch("/api/data", { headers: { "x-dashboard-key": getKey() }, cache: "no-store" });
+    } catch (err) {
+      return card("Can't reach the server", String(err));
+    }
+    if (res.status === 404) return window.startDashboard(); // plain static hosting: show the local setup steps
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 401) return keyForm(getKey() ? "That key didn't work." : "");
+    if (!res.ok) return card("Sync failed", body.message || `${res.status} ${res.statusText}`);
+    window.MOODLE_DASHBOARD = body;
+    window.startDashboard();
+  }
+  load();
 })();
 </script>
 </body>

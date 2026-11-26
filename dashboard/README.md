@@ -49,6 +49,31 @@ python3 dashboard/sync.py --days 14 --tz Europe/Vienna \
 
 `data.js`, `reports/` and `out/` are git-ignored, so your data never gets committed.
 
+## Put it on Vercel
+
+On Vercel there is no `data.js`. The page calls `/api/data`, a Python function in `api/data.py` that reads Gmail live and caches the result for 10 minutes.
+
+1. Go to [vercel.com/new](https://vercel.com/new) and import this GitHub repo. Keep the defaults: no framework and no build command. `vercel.json` handles the rest.
+2. Under **Settings → Environment Variables**, add:
+
+   | Name | Value |
+   |---|---|
+   | `GMAIL_USER` | the Gmail address the robot reports go to |
+   | `GMAIL_APP_PASSWORD` | the app password from above |
+   | `DASHBOARD_KEY` | a long random string, e.g. from `openssl rand -hex 16` |
+   | `MOODLE_DASH_NAME` | *(optional)* your first name |
+
+3. **Redeploy** so the variables take effect, then open the site and enter the key once. You can also share `https://your-app.vercel.app/#key=YOUR_KEY`. The key is saved on that device and removed from the address bar.
+
+Safety defaults:
+
+- Nothing is served until `DASHBOARD_KEY` is set.
+- Responses are `no-store` and `noindex`.
+- Other students' names and post text are removed on the server. Set `SHOW_STUDENT_NAMES=1` if you want them back on your private deployment.
+- Every push to GitHub redeploys automatically.
+
+Optional variables: `DASHBOARD_DAYS` (default 7), `DASHBOARD_TZ` (default Europe/Vienna), `DASHBOARD_TTL` in seconds (default 600), `ROBOT_QUERY`, `INBOX_QUERY`.
+
 ## Recording a video
 
 - **Privacy mode is on by default.** Other students' names become "A student" and their post text is hidden. Staff posts and announcements stay visible. Press **P** to toggle it. The "Privacy on" pill in the header tells you which mode you're in.

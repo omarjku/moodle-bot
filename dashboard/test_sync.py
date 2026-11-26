@@ -89,6 +89,19 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(data["feed"], [])
 
 
+class RedactTests(unittest.TestCase):
+    def test_redact_students_keeps_staff(self):
+        data = {"feed": [
+            {"cat": "forum", "staff": False, "author": "A Classmate", "excerpt": "personal"},
+            {"cat": "forum", "staff": True, "author": "Prof", "excerpt": "exam info"},
+            {"cat": "tasks", "item": "Quiz"},
+        ]}
+        sync.redact_students(data)
+        self.assertEqual((data["feed"][0]["author"], data["feed"][0]["excerpt"]), (None, ""))
+        self.assertEqual(data["feed"][1]["author"], "Prof")
+        self.assertTrue(data["redacted"])
+
+
 class CourseAndInboxTests(unittest.TestCase):
     def test_parse_course(self):
         c = sync.parse_course("VL / UE Mathematics for AI III 357.260")

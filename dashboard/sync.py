@@ -519,17 +519,29 @@ class Gmail:
             pass
 
 
-def sync_from_gmail(args, cache: pathlib.Path) -> None:
+def gmail_credentials() -> tuple[str, str]:
     user = os.environ.get("GMAIL_USER")
     password = os.environ.get("GMAIL_APP_PASSWORD")
     if not user or not password:
         raise SystemExit("Set GMAIL_USER and GMAIL_APP_PASSWORD (see dashboard/README.md), "
                          "or pass --reports DIR to build from saved attachments.")
+    return user, password
+
+
+def sync_from_gmail(args, cache: pathlib.Path) -> None:
+    fetch_gmail(*gmail_credentials(), cache, days=args.days, robot_query=args.robot_query,
+                inbox_query=args.inbox_query, with_inbox=not args.no_inbox)
+
+
+def fetch_gmail(user: str, password: str, cache: pathlib.Path, *, days: int = 7,
+                robot_query: str = DEFAULT_ROBOT_QUERY, inbox_query: str = DEFAULT_INBOX_QUERY,
+                with_inbox: bool = True, log=print) -> None:
+    """Download new robot report attachments (and the Moodle notification list) into `cache`."""
     cache.mkdir(parents=True, exist_ok=True)
-    lookback = args.days + 1
+    lookback = days + 1
     gm = Gmail(user, password)
     try:
-        heads = gm.headers(gm.search(f"{args.robot_query} newer_than:{lookback}d"))
+        heads = gm.headers(gm.search(f"{robot_query} newer_than:{lookback}d"))
         fetched = 0
         for h in heads:
             m = SUBJECT_RUN_RE.search(h["subject"])
@@ -540,16 +552,37 @@ def sync_from_gmail(args, cache: pathlib.Path) -> None:
                 filename, report = found
                 (cache / filename).write_text(json.dumps(report, ensure_ascii=False), encoding="utf-8")
                 fetched += 1
-        print(f"robot reports: {len(heads)} in inbox, {fetched} newly downloaded")
+        log(f"robot reports: {len(heads)} in inbox, {fetched} newly downloaded")
 
-        if not args.no_inbox:
-            rows = gm.headers(gm.search(f"{args.inbox_query} newer_than:{lookback}d"))
+        if with_inbox:
+            rows = gm.headers(gm.search(f"{inbox_query} newer_than:{lookback}d"))
             for r in rows:
                 r.pop("uid", None)
             (cache / "inbox.json").write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
-            print(f"moodle notifications: {len(rows)}")
+            log(f"moodle notifications: {len(rows)}")
     finally:
         gm.close()
+
+
+def build_from_gmail(cache: pathlib.Path, *, days: int = 7, name: str | None = None,
+                     tz: str = "Europe/Vienna", robot_query: str = DEFAULT_ROBOT_QUERY,
+                     inbox_query: str = DEFAULT_INBOX_QUERY, with_inbox: bool = True) -> dict:
+    """Fetch from Gmail and build the dashboard data in one go (used by the Vercel function)."""
+    fetch_gmail(*gmail_credentials(), cache, days=days, robot_query=robot_query,
+                inbox_query=inbox_query, with_inbox=with_inbox, log=lambda *_: None)
+    inbox_path = cache / "inbox.json"
+    inbox = json.loads(inbox_path.read_text(encoding="utf-8")) if with_inbox and inbox_path.exists() else []
+    return build(load_reports_from_dir(cache), inbox, days=days, name=name, tz=tz, source="gmail")
+
+
+def redact_students(data: dict) -> dict:
+    """Remove other students' names and post text. Staff posts and announcements stay."""
+    for e in data.get("feed", []):
+        if e.get("cat") == "forum" and not e.get("staff"):
+            e["author"] = None
+            e["excerpt"] = ""
+    data["redacted"] = True
+    return data
 
 
 # --------------------------------------------------------------------------
