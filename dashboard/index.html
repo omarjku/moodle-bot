@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moodle Robot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f3f4f6;
+  --surface: #ffffff;
+  --surface-2: #f6f7f9;
+  --surface-3: #eceef1;
+  --ink: #191919;
+  --ink-2: #5f6368;
+  --ink-3: #6f7479;
+  --line: #e7e7e7;
+  --axis: #c2c2c2;
+  --ring: rgba(11, 11, 11, 0.08);
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px rgba(16, 24, 40, 0.04);
+  --accent: #257de0;
+  --accent-strong: #1b64be;
+  --accent-wash: rgba(37, 125, 224, 0.10);
+  --accent-track: #cce3fd;
+  --glow: rgba(37, 125, 224, 0.16);
+  /* categorical slots 1-3, fixed order */
+  --c-tasks: #257de0;
+  --c-forum: #f47230;
+  --c-content: #00b894;
+  --muted-mark: #c9ced4;
+  /* status (reserved) */
+  --good: #0aac23;
+  --good-ink: #006c10;
+  --warn: #fbb315;
+  --serious: #f18a59;
+  --crit: #dc3c3d;
+  --on-fill: #ffffff;
+  --on-warn: #0b0b0b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0b0b0b;
+    --surface: #191919;
+    --surface-2: #202020;
+    --surface-3: #2a2a2a;
+    --ink: #efefef;
+    --ink-2: #9c9c9c;
+    --ink-3: #8f8f8f;
+    --line: #303030;
+    --axis: #474747;
+    --ring: rgba(255, 255, 255, 0.08);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --accent: #338ced;
+    --accent-strong: #6aabf1;
+    --accent-wash: rgba(51, 140, 237, 0.14);
+    --accent-track: #0f3561;
+    --glow: rgba(51, 140, 237, 0.22);
+    --c-tasks: #338ced;
+    --c-forum: #e76624;
+    --c-content: #00a888;
+    --muted-mark: #474747;
+    --good-ink: #53c556;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0b0b0b;
+  --surface: #191919;
+  --surface-2: #202020;
+  --surface-3: #2a2a2a;
+  --ink: #efefef;
+  --ink-2: #9c9c9c;
+  --ink-3: #8f8f8f;
+  --line: #303030;
+  --axis: #474747;
+  --ring: rgba(255, 255, 255, 0.08);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --accent: #338ced;
+  --accent-strong: #6aabf1;
+  --accent-wash: rgba(51, 140, 237, 0.14);
+  --accent-track: #0f3561;
+  --glow: rgba(51, 140, 237, 0.22);
+  --c-tasks: #338ced;
+  --c-forum: #e76624;
+  --c-content: #00a888;
+  --muted-mark: #474747;
+  --good-ink: #53c556;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20vh -10vw auto auto;
+  width: 70vw;
+  height: 70vh;
+  background: radial-gradient(closest-side, var(--glow), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+.app { position: relative; z-index: 1; max-width: 1480px; margin: 0 auto; padding: 24px 32px 40px; }
+@media (max-width: 700px) { .app { padding: 16px 16px 32px; } }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo {
+  width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--accent), #6a4ce2);
+  color: #fff; box-shadow: 0 6px 18px var(--glow);
+}
+.brand-name { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
+.brand-sub { color: var(--ink-2); font-size: 12.5px; }
+.top-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px;
+  border-radius: 999px; background: var(--surface); box-shadow: 0 0 0 1px var(--ring);
+  color: var(--ink-2); font-size: 12.5px; white-space: nowrap;
+}
+.pill strong { color: var(--ink); font-weight: 600; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+.dot.warn { background: var(--warn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 25%, transparent); }
+.dot.crit { background: var(--crit); box-shadow: 0 0 0 3px color-mix(in srgb, var(--crit) 22%, transparent); }
+.clock { font-variant-numeric: tabular-nums; }
+.icon-btn {
+  width: 32px; height: 32px; border-radius: 999px; border: 0; cursor: pointer;
+  display: grid; place-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--ring); color: var(--ink-2);
+}
+.icon-btn:hover { color: var(--ink); background: var(--surface-2); }
+.icon-btn[aria-pressed="true"] { color: var(--on-fill); background: var(--accent); box-shadow: none; }
+.privacy-flag { display: none; }
+.privacy .privacy-flag { display: inline-flex; }
+
+.hello { margin: 28px 0 20px; }
+.hello h1 { margin: 0; font-size: 30px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 700; }
+.lede { margin: 8px 0 0; color: var(--ink-2); font-size: 15.5px; max-width: 72ch; }
+.lede b { color: var(--ink); font-weight: 600; }
+
+/* ---------- grid & cards ---------- */
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+.grid + .grid { margin-top: 16px; }
+.s2 { grid-column: span 2; } .s3 { grid-column: span 3; } .s4 { grid-column: span 4; }
+.s5 { grid-column: span 5; } .s6 { grid-column: span 6; } .s7 { grid-column: span 7; }
+.s8 { grid-column: span 8; } .s12 { grid-column: span 12; }
+.stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1180px) {
+  .s5.hero, .tiles { grid-column: span 12; }
+  .s8, .s4 { grid-column: span 12; }
+  .s5, .s6, .s7 { grid-column: span 12; }
+}
+@media (max-width: 520px) {
+  .tiles { gap: 12px; }
+  .tile .spark { display: none; }
+}
+.card {
+  background: var(--surface); border-radius: 16px; padding: 20px; min-width: 0;
+  box-shadow: 0 0 0 1px var(--ring), var(--shadow);
+}
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.card-title { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.005em; }
+.card-sub { margin: 2px 0 0; color: var(--ink-2); font-size: 12.5px; }
+.ghost-btn {
+  border: 0; background: transparent; color: var(--ink-2); font-size: 12.5px; cursor: pointer;
+  padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+}
+.ghost-btn:hover { background: var(--surface-2); color: var(--ink); }
+.ghost-btn[aria-pressed="true"] { background: var(--surface-3); color: var(--ink); }
+
+/* intro animation (first paint only) */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.intro .card, .intro .hello { animation: rise 0.6s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+@media (prefers-reduced-motion: reduce) { .intro .card, .intro .hello { animation: none; } }
+
+/* ---------- hero ---------- */
+.hero { position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.hero::after {
+  content: ""; position: absolute; inset: auto -30% -60% auto; width: 80%; height: 120%;
+  background: radial-gradient(closest-side, var(--accent-wash), transparent); pointer-events: none;
+}
+.hero.warn::after { background: radial-gradient(closest-side, color-mix(in srgb, var(--warn) 18%, transparent), transparent); }
+.hero.crit::after { background: radial-gradient(closest-side, color-mix(in srgb, var(--crit) 18%, transparent), transparent); }
+.eyebrow { display: flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 12.5px; font-weight: 500; }
+.countdown { margin: 14px 0 6px; display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; }
+.countdown .seg { display: inline-flex; align-items: baseline; gap: 2px; }
+.countdown .num { font-size: 52px; line-height: 1; font-weight: 700; letter-spacing: -0.03em; }
+.countdown .unit { font-size: 18px; color: var(--ink-2); font-weight: 500; }
+.countdown .seg.sec .num { color: var(--ink-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.hero-item { font-size: 17px; font-weight: 600; margin-top: 6px; }
+.hero-meta { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+.meter { height: 8px; border-radius: 999px; background: var(--accent-track); overflow: hidden; margin-top: 16px; }
+.meter > span { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.meter.warn > span { background: var(--warn); }
+.meter.crit > span { background: var(--crit); }
+.meter-cap { margin-top: 6px; color: var(--ink-2); font-size: 12px; }
+.hero-foot { margin-top: auto; padding-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; position: relative; z-index: 1; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 10px;
+  background: var(--ink); color: var(--page); text-decoration: none; font-weight: 600; font-size: 13px;
+}
+.btn.secondary { background: var(--surface-2); color: var(--ink); box-shadow: 0 0 0 1px var(--ring); }
+
+/* ---------- tiles ---------- */
+.tile { display: flex; flex-direction: column; gap: 6px; position: relative; }
+.tile-label { color: var(--ink-2); font-size: 12.5px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.tile-value { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.tile-delta { color: var(--ink-2); font-size: 12.5px; }
+.tile-delta b { color: var(--ink); font-weight: 600; }
+.tile-delta .status-ic { vertical-align: -3px; margin-right: 3px; }
+.tile .spark { position: absolute; right: 20px; bottom: 20px; }
+.todo-tag { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 4px; color: var(--ink-2); font-size: 13px; }
+.status-ic { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; color: #fff; flex: none; }
+.status-ic.crit { background: var(--crit); }
+.status-ic.warn { background: var(--warn); color: var(--on-warn); }
+.status-ic.good { background: var(--good); }
+.status-ic.neutral { background: var(--surface-3); color: var(--ink-2); }
+
+/* ---------- feed ---------- */
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin: -2px 0 12px; }
+.chip {
+  border: 0; cursor: pointer; height: 30px; padding: 0 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500;
+  background: var(--surface-2); color: var(--ink-2); display: inline-flex; align-items: center; gap: 7px;
+  box-shadow: 0 0 0 1px var(--ring);
+}
+.chip:hover { color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--page); box-shadow: none; }
+.chip .sw { width: 8px; height: 8px; border-radius: 50%; }
+.chip .n { opacity: 0.7; font-variant-numeric: tabular-nums; }
+.day { margin: 16px 0 4px; font-size: 12px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.06em; }
+.day:first-of-type { margin-top: 4px; }
+.feed { list-style: none; margin: 0; padding: 0; }
+.ev { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; padding: 11px 8px; border-radius: 12px; align-items: start; }
+.ev + .ev { box-shadow: 0 -1px 0 var(--line); }
+.ev:hover { background: var(--surface-2); box-shadow: none; }
+.ev:hover + .ev { box-shadow: none; }
+.ev-mark {
+  width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c);
+}
+.ev-title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; overflow-wrap: anywhere; }
+.ev-meta { color: var(--ink-2); font-size: 12.5px; margin-top: 2px; display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: center; }
+.ev-meta .sep { color: var(--axis); }
+.ev-excerpt { margin: 6px 0 0; color: var(--ink-2); font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.ev-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.ev-time { color: var(--ink-3); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.open-link { color: var(--ink-2); display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; }
+.open-link:hover { background: var(--surface-3); color: var(--ink); }
+.course { color: var(--ink); font-weight: 500; }
+.code { color: var(--ink-3); font-weight: 400; font-size: 12px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 600; white-space: nowrap; background: var(--surface-3); color: var(--ink-2);
+}
+.badge.good { background: var(--good); color: var(--on-fill); }
+.badge.crit { background: var(--crit); color: var(--on-fill); }
+.badge.warn { background: var(--warn); color: var(--on-warn); }
+.badge.staff { background: var(--accent-wash); color: var(--accent-strong); }
+.more { margin-top: 10px; width: 100%; height: 38px; border-radius: 10px; border: 0; cursor: pointer; background: var(--surface-2); color: var(--ink-2); font-weight: 500; box-shadow: 0 0 0 1px var(--ring); }
+.more:hover { color: var(--ink); }
+.empty { color: var(--ink-2); padding: 24px 8px; text-align: center; }
+
+/* ---------- lists (up next, grades, inbox) ---------- */
+.rows { list-style: none; margin: 0; padding: 0; }
+.row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; padding: 10px 0; align-items: start; }
+.row + .row { border-top: 1px solid var(--line); }
+.row-title { font-weight: 600; font-size: 13.5px; overflow-wrap: anywhere; }
+.row-meta { color: var(--ink-2); font-size: 12px; margin-top: 1px; }
+.row-right { text-align: right; white-space: nowrap; }
+.row-right .big { font-weight: 600; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.row-right .small { color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+.row.dim .row-title { color: var(--ink-2); font-weight: 500; }
+.row .status-ic { margin-top: 2px; }
+details.group { border-top: 1px solid var(--line); margin-top: 4px; }
+details.group > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0 9px; color: var(--ink-2); font-size: 13px; font-weight: 500;
+}
+details.group > summary::-webkit-details-marker { display: none; }
+details.group > summary .chev { transition: transform .2s; }
+details.group[open] > summary .chev { transform: rotate(90deg); }
+.gmeter { height: 6px; border-radius: 999px; background: var(--accent-track); overflow: hidden; margin-top: 7px; }
+.gmeter > span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+
+/* ---------- charts ---------- */
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--ink-2); font-size: 12px; margin: -4px 0 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.legend i.ring { border-radius: 50%; }
+.legend i.hollow { border-radius: 50%; background: transparent !important; box-shadow: inset 0 0 0 2px var(--c); }
+.chart { width: 100%; }
+.chart svg { display: block; overflow: visible; }
+.chart text { font-family: inherit; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 10px; }
+.stats span { background: var(--surface-2); box-shadow: 0 0 0 1px var(--ring); border-radius: 8px; padding: 3px 9px; font-size: 12px; color: var(--ink-2); }
+.stats b { color: var(--ink); font-weight: 600; }
+table.data { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.data th, table.data td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); }
+table.data th { color: var(--ink-2); font-weight: 500; }
+table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.hit { cursor: default; outline: none; }
+.hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.tip {
+  position: fixed; z-index: 50; pointer-events: none; max-width: 300px;
+  background: var(--surface); color: var(--ink); border-radius: 10px; padding: 10px 12px;
+  box-shadow: 0 0 0 1px var(--ring), 0 8px 28px rgba(0, 0, 0, 0.18); font-size: 12.5px;
+}
+.tip .t-h { font-weight: 600; margin-bottom: 4px; }
+.tip .t-r { display: flex; justify-content: space-between; gap: 16px; color: var(--ink-2); }
+.tip .t-r b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.tip .t-r i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+
+.foot { margin-top: 28px; color: var(--ink-3); font-size: 12px; display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
+kbd { font: 11px/1 Inter, system-ui, sans-serif; padding: 2px 5px; border-radius: 4px; box-shadow: 0 0 0 1px var(--ring); background: var(--surface); }
+code.inline { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); padding: 2px 6px; border-radius: 6px; }
+.setup { max-width: 640px; margin: 12vh auto; }
+.setup ol { padding-left: 18px; color: var(--ink-2); }
+.setup li { margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<script src="data.js" data-dashboard-data></script>
+<script>
+(() => {
+  "use strict";
+  const D = window.MOODLE_DASHBOARD;
+  const app = document.getElementById("app");
+  const tip = document.getElementById("tip");
+  const params = new URLSearchParams(location.search);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- tiny utils ----------
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const safeUrl = (u) => (typeof u === "string" && /^https?:\/\//i.test(u) ? u : null);
+  const store = {
+    get(k) { try { return localStorage.getItem("moodle-dash:" + k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem("moodle-dash:" + k, v); } catch { /* private mode */ } },
+  };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many || one + "s"}`;
+
+  // A ?now=2026-11-26T09:30 override keeps takes consistent when recording; the clock still ticks.
+  const t0 = performance.now();
+  const nowBase = params.get("now") ? Date.parse(params.get("now")) : NaN;
+  const now = () => (Number.isFinite(nowBase) ? nowBase + (performance.now() - t0) : Date.now());
+
+  // ---------- state ----------
+  const state = {
+    filter: "all",
+    showAll: false,
+    tables: {},
+    privacy: params.has("privacy") ? params.get("privacy") !== "0" : store.get("privacy") !== "0",
+  };
+  const themeParam = params.get("theme");
+  const savedTheme = themeParam || store.get("theme");
+  if (savedTheme === "dark" || savedTheme === "light") document.documentElement.dataset.theme = savedTheme;
+
+  // ---------- icons ----------
+  const P = {
+    star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>',
+    plus: '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8.5v7M8.5 12h7"/>',
+    check: '<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.4l2.5 2.5 5-5.2"/>',
+    calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    refresh: '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/>',
+    file: '<path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5M9 13h6M9 16.5h4"/>',
+    link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+    video: '<rect x="3" y="6" width="12.5" height="12" rx="2.5"/><path d="M15.5 10.5l5.5-3.2v9.4l-5.5-3.2z"/>',
+    layers: '<path d="M12 3.5l8.5 4.7L12 13 3.5 8.2z"/><path d="M3.5 12.6L12 17.4l8.5-4.8"/>',
+    message: '<path d="M20.5 14.5a2 2 0 0 1-2 2H8.5l-5 4v-15a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/>',
+    megaphone: '<path d="M4 10v4h3l8 4.5v-13L7 10z"/><path d="M18.5 9.5a3.5 3.5 0 0 1 0 5"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    shield: '<path d="M12 3.5l7 2.8v5.4c0 4.3-2.9 7.3-7 8.8-4.1-1.5-7-4.5-7-8.8V6.3z"/><path d="M9.3 12l1.9 1.9 3.6-3.8"/>',
+    mail: '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 5.6L20 7"/>',
+    alert: '<path d="M12 7.5v5.2M12 16.3v.2"/>',
+    unlock: '<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.8a4 4 0 0 1 7.7-1.5"/>',
+    out: '<path d="M14 4.5h5.5V10M19.5 4.5L11 13"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/>',
+    eye: '<path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',
+    eyeOff: '<path d="M4 4l16 16"/><path d="M10.2 5.7A9 9 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a15 15 0 0 1-3 3.6M6.4 7.3C3.9 9 2.5 12 2.5 12s3.5 6.5 9.5 6.5a9 9 0 0 0 4.2-1"/><path d="M9.9 10a2.8 2.8 0 0 0 4 4"/>',
+    moon: '<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+    chev: '<path d="M9.5 6.5l5.5 5.5-5.5 5.5"/>',
+    bot: '<rect x="4.5" y="8" width="15" height="11" rx="3.5"/><path d="M12 4.5V8"/><circle cx="12" cy="4" r="1.2" fill="currentColor" stroke="none"/><circle cx="9.3" cy="13.3" r="1.5" fill="currentColor" stroke="none"/><circle cx="14.7" cy="13.3" r="1.5" fill="currentColor" stroke="none"/><path d="M2.5 12.5v2.5M21.5 12.5v2.5"/>',
+  };
+  const icon = (name, size = 18, sw = 1.75) =>
+    `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || ""}</svg>`;
+
+  // ---------- time (always in the data's time zone, Europe/Vienna by default) ----------
+  const TZ = (D && D.tz) || "Europe/Vienna";
+  const F = (o) => new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hourCycle: "h23", ...o });
+  const fDayKey = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
+  const fParts = F({ year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" });
+  const fTime = F({ hour: "2-digit", minute: "2-digit" });
+  const fDay = F({ weekday: "short", day: "numeric", month: "short" });
+  const fDayShort = F({ weekday: "short", day: "numeric" });
+  const fDate = F({ day: "numeric", month: "short" });
+  const fLongDay = F({ weekday: "long", day: "numeric", month: "short" });
+  const fHour = F({ hour: "numeric" });
+  const fWeekday = F({ weekday: "short" });
+  const fDayNum = F({ day: "numeric" });
+  const DAY = 86400000;
+  const dayKey = (ms) => fDayKey.format(ms);
+  const dayTime = (ms) => `${fDay.format(ms)}, ${fTime.format(ms)}`;
+  function tzOffset(ms) {
+    const p = Object.fromEntries(fParts.formatToParts(ms).map((x) => [x.type, x.value]));
+    const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second);
+    return asUTC - Math.floor(ms / 1000) * 1000;
+  }
+  function startOfDay(ms) {
+    const p = Object.fromEntries(fParts.formatToParts(ms).map((x) => [x.type, x.value]));
+    return Date.UTC(+p.year, +p.month - 1, +p.day) - tzOffset(ms);
+  }
+  function dayLabel(ms) {
+    const k = dayKey(ms);
+    if (k === dayKey(now())) return "Today";
+    if (k === dayKey(now() - DAY)) return "Yesterday";
+    return fLongDay.format(ms);
+  }
+  function span(ms) {
+    const a = Math.abs(ms), m = Math.floor(a / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+    if (m < 1) return "a moment";
+    if (h < 1) return `${m} min`;
+    if (d < 1) return `${h} h ${m % 60 ? (m % 60) + " min" : ""}`.trim();
+    if (d < 7) return `${d} d ${h % 24 ? (h % 24) + " h" : ""}`.trim();
+    return `${d} days`;
+  }
+  const rel = (ms) => (ms - now() >= 0 ? `in ${span(ms - now())}` : `${span(now() - ms)} ago`);
+
+  // ---------- data helpers ----------
+  const CATS = [
+    { id: "tasks", label: "Tasks & grades", color: "var(--c-tasks)" },
+    { id: "forum", label: "Forum", color: "var(--c-forum)" },
+    { id: "content", label: "New content", color: "var(--c-content)" },
+  ];
+  const catOf = Object.fromEntries(CATS.map((c) => [c.id, c]));
+  const MOD_NAME = { assign: "assignment", quiz: "quiz", checkmark: "cross list", feedback: "survey", choice: "choice", workshop: "workshop", lesson: "lesson" };
+  const CONTENT_NAME = { resource: "New file", url: "New link", page: "New page", folder: "New folder", opencast: "New recording", label: "New note", zoom: "New meeting link", book: "New book" };
+  const CONTENT_ICON = { resource: "file", url: "link", page: "file", folder: "layers", opencast: "video", zoom: "video", label: "file" };
+  const TODO_VERB = { submit: "Submit", "mark-crosses": "Mark crosses", survey: "Fill in survey", choose: "Choose", "take-quiz": "Take quiz" };
+
+  function course(full) {
+    const c = (D.courses && D.courses[full]) || { name: full || "Moodle", type: "", code: "" };
+    return c;
+  }
+  function courseHtml(full, withCode = true) {
+    const c = course(full);
+    const code = withCode && (c.type || c.code) ? ` <span class="code">${esc([c.type, c.code].filter(Boolean).join(" "))}</span>` : "";
+    return `<span class="course">${esc(c.name)}</span>${code}`;
+  }
+  const isStaff = (e) => !!e.staff;
+  const author = (e) => (state.privacy && !isStaff(e) ? "A student" : e.author || "Someone");
+
+  function prepActions() {
+    const t = now();
+    const rows = (D.actions || []).map((a) => ({ ...a, dueMs: a.due ? a.due * 1000 : null, opensMs: a.opens ? a.opens * 1000 : null }));
+    const upcoming = rows.filter((a) => a.dueMs && a.dueMs > t && !a.missed).sort((a, b) => a.dueMs - b.dueMs);
+    const overdue = rows.filter((a) => a.dueMs && (a.missed || a.dueMs <= t)).sort((a, b) => b.dueMs - a.dueMs);
+    const anytime = rows.filter((a) => !a.dueMs);
+    return { rows, upcoming, overdue, anytime, required: upcoming.filter((a) => !a.optional) };
+  }
+  function urgency(dueMs) {
+    const h = (dueMs - now()) / 3600000;
+    if (h <= 24) return "crit";
+    if (h <= 72) return "warn";
+    return "neutral";
+  }
+
+  // ---------- tooltip ----------
+  let tipTarget = null;
+  function showTip(el, x, y) {
+    tip.innerHTML = el.getAttribute("data-tip");
+    tip.hidden = false;
+    const r = tip.getBoundingClientRect();
+    const left = clamp(x + 14, 8, window.innerWidth - r.width - 8);
+    const top = y + 14 + r.height > window.innerHeight - 8 ? y - r.height - 12 : y + 14;
+    tip.style.left = left + "px";
+    tip.style.top = Math.max(8, top) + "px";
+  }
+  document.addEventListener("pointermove", (ev) => {
+    const el = ev.target.closest && ev.target.closest("[data-tip]");
+    if (el) { tipTarget = el; showTip(el, ev.clientX, ev.clientY); }
+    else if (tipTarget) { tipTarget = null; tip.hidden = true; }
+  });
+  document.addEventListener("focusin", (ev) => {
+    const el = ev.target.closest && ev.target.closest("[data-tip]");
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    tipTarget = el; showTip(el, r.left + r.width / 2, r.bottom);
+  });
+  document.addEventListener("focusout", () => { tipTarget = null; tip.hidden = true; });
+  const tipRows = (title, rows) =>
+    `<div class="t-h">${esc(title)}</div>` + rows.map(([k, v, sw]) =>
+      `<div class="t-r"><span>${sw ? `<i style="background:${sw}"></i>` : ""}${esc(k)}</span><b>${esc(v)}</b></div>`).join("");
+  const attrTip = (html) => `data-tip="${esc(html)}"`;
+
+  // ---------- svg helpers ----------
+  function niceTicks(max, target = 4) {
+    const raw = Math.max(1, max) / target;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= raw) || mag * 10;
+    const out = [];
+    for (let v = 0; v <= max + step * 0.001 || out.length < 2; v += step) out.push(Math.round(v * 100) / 100);
+    if (out[out.length - 1] < max) out.push(out[out.length - 1] + step);
+    return out;
+  }
+  // column with a 4px rounded data end and a square baseline end
+  function colPath(x, yTop, w, yBottom, round) {
+    const h = yBottom - yTop;
+    if (h <= 0) return "";
+    const r = round ? Math.min(4, h, w / 2) : 0;
+    return `M${x},${yBottom}V${yTop + r}Q${x},${yTop} ${x + r},${yTop}H${x + w - r}Q${x + w},${yTop} ${x + w},${yTop + r}V${yBottom}Z`;
+  }
+  function barPath(x0, y, len, h) {
+    if (len <= 0) return "";
+    const r = Math.min(4, len, h / 2);
+    return `M${x0},${y}H${x0 + len - r}Q${x0 + len},${y} ${x0 + len},${y + r}V${y + h - r}Q${x0 + len},${y + h} ${x0 + len - r},${y + h}H${x0}Z`;
+  }
+
+  // ---------- charts ----------
+  function lastDays(n) {
+    const today = startOfDay(now());
+    return Array.from({ length: n }, (_, i) => {
+      const start = startOfDay(today - (n - 1 - i) * DAY + DAY / 2);
+      return { key: dayKey(start + DAY / 2), start, label: i === n - 1 ? "Today" : fDayShort.format(start + DAY / 2), today: i === n - 1 };
+    });
+  }
+  function activityData() {
+    const days = lastDays(7);
+    const idx = Object.fromEntries(days.map((d, i) => [d.key, i]));
+    const counts = days.map(() => ({ tasks: 0, forum: 0, content: 0 }));
+    for (const e of D.feed || []) {
+      const i = idx[dayKey(e.ts * 1000)];
+      if (i !== undefined && counts[i][e.cat] !== undefined) counts[i][e.cat]++;
+    }
+    return { days, counts, totals: counts.map((c) => c.tasks + c.forum + c.content) };
+  }
+
+  function activityChart(w) {
+    const { days, counts, totals } = activityData();
+    const H = 230, padL = 30, padR = 6, padT = 10, padB = 30;
+    const plotW = w - padL - padR, plotH = H - padT - padB;
+    const ticks = niceTicks(Math.max(...totals, 1));
+    const top = ticks[ticks.length - 1];
+    const y = (v) => padT + plotH - (v / top) * plotH;
+    const slot = plotW / days.length, bw = Math.min(24, slot * 0.5);
+    let s = `<svg width="${w}" height="${H}" role="img" aria-label="Updates per day for the last 7 days, stacked by type">`;
+    for (const t of ticks) {
+      s += `<line x1="${padL}" x2="${w - padR}" y1="${y(t)}" y2="${y(t)}" stroke="${t === 0 ? "var(--axis)" : "var(--line)"}" stroke-width="1" shape-rendering="crispEdges"/>`;
+      s += `<text x="${padL - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11.5" fill="var(--ink-2)" style="font-variant-numeric:tabular-nums">${t}</text>`;
+    }
+    days.forEach((d, i) => {
+      const x = padL + slot * i + (slot - bw) / 2;
+      let acc = 0;
+      const segs = CATS.map((c) => ({ c, v: counts[i][c.id] })).filter((g) => g.v > 0);
+      segs.forEach((g, j) => {
+        const yTop = y(acc + g.v), yBot = y(acc) - (j > 0 ? 2 : 0);
+        acc += g.v;
+        s += `<path d="${colPath(x, yTop, bw, Math.max(yTop + 1, yBot), j === segs.length - 1)}" fill="${g.c.color}"/>`;
+      });
+      const html = tipRows(`${fLongDay.format(d.start + DAY / 2)} · ${plural(totals[i], "update")}`,
+        CATS.map((c) => [c.label, counts[i][c.id], c.color]));
+      s += `<rect class="hit" tabindex="0" x="${padL + slot * i}" y="${padT}" width="${slot}" height="${plotH}" fill="transparent" ${attrTip(html)} aria-label="${esc(d.label)}: ${totals[i]} updates"/>`;
+      const lab = slot < 50 ? (d.today ? "Today" : fDayNum.format(d.start + DAY / 2)) : d.label;
+      s += `<text x="${x + bw / 2}" y="${H - 9}" text-anchor="middle" font-size="11.5" fill="${d.today ? "var(--ink)" : "var(--ink-2)"}" font-weight="${d.today ? 600 : 400}">${esc(lab)}</text>`;
+      if (totals[i] && totals[i] === Math.max(...totals)) {
+        s += `<text x="${x + bw / 2}" y="${y(totals[i]) - 7}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">${totals[i]}</text>`;
+      }
+    });
+    return s + "</svg>";
+  }
+  function activityTable() {
+    const { days, counts, totals } = activityData();
+    return table(["Day", ...CATS.map((c) => c.label), "Total"], days.map((d, i) => [d.label, ...CATS.map((c) => counts[i][c.id]), totals[i]]), [1, 2, 3, 4]);
+  }
+
+  function runwayItems() {
+    const { upcoming } = prepActions();
+    return upcoming;
+  }
+  function runwayChart(w) {
+    const items = runwayItems();
+    const H = 210, padL = 10, padR = 16, padT = 58, padB = 34;
+    const plotW = w - padL - padR, base = H - padB;
+    const start = startOfDay(now());
+    const maxDue = items.length ? items[items.length - 1].dueMs : start + 21 * DAY;
+    const daysSpan = clamp(Math.ceil((maxDue - start) / DAY) + 2, 21, 70);
+    const end = start + daysSpan * DAY;
+    const x = (t) => padL + ((t - start) / (end - start)) * plotW;
+    const shown = items.filter((a) => a.dueMs <= end), later = items.length - shown.length;
+    let s = `<svg width="${w}" height="${H}" role="img" aria-label="Upcoming deadlines on a timeline">`;
+    s += `<line x1="${padL}" x2="${w - padR}" y1="${base}" y2="${base}" stroke="var(--axis)" shape-rendering="crispEdges"/>`;
+    // weekly ticks on Mondays
+    let lastTickLabel = -Infinity;
+    for (let t = start; t <= end; t += DAY) {
+      const mid = t + DAY / 2;
+      if (fWeekday.format(mid) !== "Mon") continue;
+      const px = x(startOfDay(mid));
+      s += `<line x1="${px}" x2="${px}" y1="${padT - 6}" y2="${base}" stroke="var(--line)" shape-rendering="crispEdges"/>`;
+      s += `<line x1="${px}" x2="${px}" y1="${base}" y2="${base + 4}" stroke="var(--axis)" shape-rendering="crispEdges"/>`;
+      if (Math.abs(px - x(now())) > 36 && px - lastTickLabel > 48 && (lastTickLabel = px)) s += `<text x="${px}" y="${base + 18}" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">${esc(fDate.format(mid))}</text>`;
+    }
+    const nx = x(now());
+    s += `<line x1="${nx}" x2="${nx}" y1="${padT - 12}" y2="${base}" stroke="var(--ink)" stroke-width="1.5"/>`;
+    s += `<text x="${nx}" y="${base + 18}" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">Now</text>`;
+    // stack same-day deadlines
+    const groups = new Map();
+    for (const a of shown) {
+      const k = dayKey(a.dueMs);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(a);
+    }
+    const labels = [];
+    let first = true;
+    for (const [, list] of groups) {
+      const cx = x(list[0].dueMs);
+      list.forEach((a, j) => {
+        const cy = base - 12 - j * 15;
+        const u = urgency(a.dueMs);
+        const col = u === "crit" ? "var(--crit)" : u === "warn" ? "var(--warn)" : "var(--accent)";
+        if (cy < padT - 4) return;
+        s += a.optional
+          ? `<circle cx="${cx}" cy="${cy}" r="5" fill="var(--surface)" stroke="${col}" stroke-width="2"/>`
+          : `<circle cx="${cx}" cy="${cy}" r="6" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`;
+        const html = tipRows(a.item, [["Course", course(a.course).name], ["Due", dayTime(a.dueMs)], ["", rel(a.dueMs)]].concat(a.optional ? [["", "Optional"]] : []));
+        s += `<circle class="hit" tabindex="0" cx="${cx}" cy="${cy}" r="12" fill="transparent" ${attrTip(html)} aria-label="${esc(a.item)}, due ${esc(dayTime(a.dueMs))}"/>`;
+      });
+      const labelY = padT - 30;
+      if (first) labels.push({ x: cx, y: labelY, text: list.length > 1 ? `${list[0].item} +${list.length - 1}` : list[0].item, strong: true });
+      else if (list.length >= 3) labels.push({ x: cx, y: labelY, text: `${list.length} due ${fDate.format(list[0].dueMs)}` });
+      first = false;
+    }
+    let lastRight = -Infinity;
+    for (const l of labels) {
+      const text = l.text.length > 30 ? l.text.slice(0, 29) + "…" : l.text;
+      const wEst = text.length * 6.4;
+      let lx = clamp(l.x - wEst / 2, padL, w - padR - wEst);
+      if (lx < lastRight + 8) continue;
+      lastRight = lx + wEst;
+      s += `<line x1="${l.x}" x2="${l.x}" y1="${l.y + 6}" y2="${padT - 8}" stroke="var(--axis)"/>`;
+      s += `<text x="${lx}" y="${l.y}" font-size="12" font-weight="${l.strong ? 600 : 500}" fill="${l.strong ? "var(--ink)" : "var(--ink-2)"}">${esc(text)}</text>`;
+    }
+    if (later) s += `<text x="${w - padR}" y="${base + 18}" text-anchor="end" font-size="11.5" fill="var(--ink-2)">+${later} later →</text>`;
+    return s + "</svg>";
+  }
+  function runwayTable() {
+    return table(["Due", "To-do", "Course", ""], runwayItems().map((a) => [dayTime(a.dueMs), a.item, course(a.course).name, a.optional ? "optional" : ""]), []);
+  }
+
+  function courseData() {
+    const m = new Map();
+    for (const e of D.feed || []) {
+      if (!m.has(e.course)) m.set(e.course, { course: e.course, total: 0, tasks: 0, forum: 0, content: 0 });
+      const r = m.get(e.course);
+      r.total++; r[e.cat] = (r[e.cat] || 0) + 1;
+    }
+    return [...m.values()].sort((a, b) => b.total - a.total);
+  }
+  function coursesChart(w) {
+    const rows = courseData().slice(0, 7);
+    const rowH = 34, H = rows.length * rowH + 4;
+    const labelW = clamp(w * 0.44, 120, 250), valW = 30;
+    const barMax = Math.max(40, w - labelW - valW - 8);
+    const max = Math.max(1, ...rows.map((r) => r.total));
+    let s = `<svg width="${w}" height="${H}" role="img" aria-label="Updates per course this week">`;
+    rows.forEach((r, i) => {
+      const c = course(r.course);
+      const yy = i * rowH;
+      const len = (r.total / max) * barMax;
+      const maxChars = Math.floor((labelW - 10) / 7);
+      const name = c.name.length > maxChars ? c.name.slice(0, maxChars - 1) + "…" : c.name;
+      s += `<text x="0" y="${yy + 15}" font-size="12.5" font-weight="500" fill="var(--ink)">${esc(name)}</text>`;
+      s += `<text x="0" y="${yy + 29}" font-size="11" fill="var(--ink-2)">${esc([c.type, c.code].filter(Boolean).join(" "))}</text>`;
+      s += `<line x1="${labelW}" x2="${labelW}" y1="${yy + 6}" y2="${yy + 28}" stroke="var(--axis)" shape-rendering="crispEdges"/>`;
+      s += `<path d="${barPath(labelW, yy + 11, len, 12)}" fill="var(--accent)"/>`;
+      s += `<text x="${labelW + len + 8}" y="${yy + 21.5}" font-size="12" font-weight="600" fill="var(--ink)" style="font-variant-numeric:tabular-nums">${r.total}</text>`;
+      const html = tipRows(r.course, CATS.map((k) => [k.label, r[k.id] || 0, k.color]));
+      s += `<rect class="hit" tabindex="0" x="0" y="${yy}" width="${w}" height="${rowH}" fill="transparent" ${attrTip(html)} aria-label="${esc(c.name)}: ${r.total} updates"/>`;
+    });
+    return s + "</svg>";
+  }
+  function coursesTable() {
+    return table(["Course", ...CATS.map((c) => c.label), "Total"], courseData().map((r) => [r.course, ...CATS.map((c) => r[c.id] || 0), r.total]), [1, 2, 3, 4]);
+  }
+
+  function runsChart(w) {
+    const runs = D.runs || [];
+    const H = 210, padL = 30, padR = 6, padT = 10, padB = 40;
+    const plotW = w - padL - padR, plotH = H - padT - padB;
+    const ticks = niceTicks(Math.max(1, ...runs.map((r) => r.raw)));
+    const top = ticks[ticks.length - 1];
+    const y = (v) => padT + plotH - (v / top) * plotH;
+    const slot = plotW / Math.max(1, runs.length), bw = Math.min(24, slot * 0.55);
+    let s = `<svg width="${w}" height="${H}" role="img" aria-label="Changes per robot run, kept versus filtered">`;
+    for (const t of ticks) {
+      s += `<line x1="${padL}" x2="${w - padR}" y1="${y(t)}" y2="${y(t)}" stroke="${t === 0 ? "var(--axis)" : "var(--line)"}" shape-rendering="crispEdges"/>`;
+      s += `<text x="${padL - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11.5" fill="var(--ink-2)" style="font-variant-numeric:tabular-nums">${t}</text>`;
+    }
+    runs.forEach((r, i) => {
+      const x = padL + slot * i + (slot - bw) / 2;
+      const kept = r.keptChanges ?? r.kept, noise = r.noise ?? Math.max(0, r.raw - kept);
+      if (kept > 0) s += `<path d="${colPath(x, y(kept), bw, y(0), noise === 0)}" fill="var(--accent)"/>`;
+      if (noise > 0) s += `<path d="${colPath(x, y(kept + noise), bw, y(kept) - (kept > 0 ? 2 : 0), true)}" fill="var(--muted-mark)"/>`;
+      const ms = (r.finishedTs || r.startedTs) * 1000;
+      const dur = r.finishedTs && r.startedTs ? `${r.finishedTs - r.startedTs} s` : "–";
+      const html = tipRows(`${dayTime(ms)} · ${r.mode || "run"}${r.baseline ? " (baseline)" : ""}`, [
+        ["Kept", kept, "var(--accent)"], ["Filtered as noise", noise, "var(--muted-mark)"],
+        ["Status", r.status || "–"], ["Duration", dur], ["Errors", r.errors || 0]]);
+      s += `<rect class="hit" tabindex="0" x="${padL + slot * i}" y="${padT}" width="${slot}" height="${plotH}" fill="transparent" ${attrTip(html)} aria-label="Run ${esc(r.runId)}: ${kept} kept, ${noise} filtered"/>`;
+      const showLabel = slot >= 44 || (runs.length - 1 - i) % 2 === 0;
+      if (showLabel) {
+        s += `<text x="${x + bw / 2}" y="${H - 22}" text-anchor="middle" font-size="11" fill="var(--ink-2)">${esc(fDayShort.format(ms))}</text>`;
+        s += `<text x="${x + bw / 2}" y="${H - 8}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)" style="font-variant-numeric:tabular-nums">${esc(fTime.format(ms))}</text>`;
+      }
+    });
+    return s + "</svg>";
+  }
+  function runsTable() {
+    return table(["Run", "Mode", "Status", "Raw", "Kept", "Filtered"], (D.runs || []).map((r) => [
+      dayTime((r.finishedTs || r.startedTs) * 1000), r.mode + (r.baseline ? " (baseline)" : ""), r.status, r.raw, r.keptChanges ?? r.kept, r.noise ?? "",
+    ]), [3, 4, 5]);
+  }
+
+  function sparkline(values, w = 132, h = 34) {
+    const max = Math.max(1, ...values);
+    const step = w / Math.max(1, values.length - 1);
+    const pts = values.map((v, i) => [i * step, h - 5 - (v / max) * (h - 10)]);
+    const line = pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("");
+    const area = `${line}L${w},${h}L0,${h}Z`;
+    const last = pts[pts.length - 1];
+    return `<svg class="spark" width="${w}" height="${h}" viewBox="-5 -1 ${w + 10} ${h + 2}" aria-hidden="true">
+      <path d="${area}" fill="var(--accent)" opacity="0.1"/>
+      <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${last[0]}" cy="${last[1]}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/></svg>`;
+  }
+
+  function table(head, rows, numCols) {
+    return `<table class="data"><thead><tr>${head.map((h, i) => `<th class="${numCols.includes(i) ? "num" : ""}">${esc(h)}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map((r) => `<tr>${r.map((v, i) => `<td class="${numCols.includes(i) ? "num" : ""}">${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  }
+
+  const CHARTS = {
+    activity: { svg: activityChart, table: activityTable },
+    runway: { svg: runwayChart, table: runwayTable },
+    courses: { svg: coursesChart, table: coursesTable },
+    runs: { svg: runsChart, table: runsTable },
+  };
+  function drawCharts() {
+    for (const el of app.querySelectorAll("[data-chart]")) {
+      const id = el.dataset.chart;
+      const w = Math.floor(el.clientWidth);
+      if (!w) continue;
+      el.innerHTML = state.tables[id] ? CHARTS[id].table() : CHARTS[id].svg(w);
+    }
+  }
+
+  // ---------- feed ----------
+  function feedView(e) {
+    const it = { icon: "file", title: e.item || e.title, badges: [], meta: [], excerpt: "" };
+    const sect = e.section && !/^(general|allgemein)/i.test(e.section) ? esc(e.section) : "";
+    switch (e.type) {
+      case "grade":
+        it.icon = "star";
+        it.title = `Graded · ${e.item}`;
+        if (e.pct != null) it.badges.push(`<span class="badge good">${esc(Math.round(e.pct))}%</span>`);
+        if (e.score) it.meta.push(`${esc(e.score)}${e.max ? " / " + esc(e.max) : ""} points`);
+        if (e.feedback) it.excerpt = e.feedback;
+        break;
+      case "new-task":
+      case "todo":
+        it.icon = "plus";
+        it.title = `New ${MOD_NAME[e.mod] || "to-do"} · ${e.item}`;
+        if (e.due) it.badges.push(`<span class="badge">due ${esc(fDay.format(e.due * 1000))}</span>`);
+        if (e.optional) it.badges.push(`<span class="badge">optional</span>`);
+        if (sect) it.meta.push(sect);
+        it.excerpt = e.excerpt;
+        break;
+      case "done":
+        it.icon = "check";
+        it.title = `Done · ${e.item}`;
+        it.badges.push(`<span class="badge good">completed</span>`);
+        break;
+      case "date-changed":
+        it.icon = "calendar";
+        it.title = `${e.role === "due" ? "Due date" : "Date"} moved · ${e.item}`;
+        if (e.after) it.meta.push(`now ${esc(dayTime(e.after * 1000))}`);
+        break;
+      case "post":
+      case "announcement": {
+        it.icon = e.type === "announcement" ? "megaphone" : "message";
+        it.title = e.title;
+        if (e.type === "announcement") it.badges.push(`<span class="badge staff">Announcement</span>`);
+        if (e.sev === "urgent") it.badges.push(`<span class="badge crit">Important</span>`);
+        it.meta.push(`by ${esc(author(e))}${isStaff(e) && e.type !== "announcement" ? ' <span class="badge staff">Staff</span>' : ""}`);
+        if (e.forum) it.meta.push(esc(e.forum));
+        it.excerpt = state.privacy && !isStaff(e) ? "" : e.excerpt;
+        break;
+      }
+      case "new-content":
+        it.icon = CONTENT_ICON[e.mod] || "file";
+        it.title = `${CONTENT_NAME[e.mod] || "New material"} · ${e.item}`;
+        if (sect) it.meta.push(sect);
+        it.excerpt = e.excerpt;
+        break;
+      case "new-file":
+        it.icon = "file";
+        it.title = `New file · ${e.file || e.item}`;
+        if (e.item) it.meta.push(`in ${esc(e.item)}`);
+        break;
+      case "new-section":
+      case "section-renamed":
+        it.icon = "layers";
+        it.title = `New section · ${e.title}`;
+        break;
+      case "status":
+        it.icon = "refresh";
+        it.title = e.title;
+        break;
+      default:
+        it.title = e.title || e.item;
+    }
+    return it;
+  }
+  function feedItem(e) {
+    const v = feedView(e);
+    const cat = catOf[e.cat] || CATS[2];
+    const url = safeUrl(e.url);
+    return `<li class="ev">
+      <span class="ev-mark" style="--c:${cat.color}" title="${esc(cat.label)}">${icon(v.icon, 17)}</span>
+      <div>
+        <div class="ev-title"><span>${esc(v.title)}</span>${v.badges.join("")}</div>
+        <div class="ev-meta">${[courseHtml(e.course), ...v.meta].join('<span class="sep">·</span>')}</div>
+        ${v.excerpt ? `<p class="ev-excerpt">${esc(v.excerpt)}</p>` : ""}
+      </div>
+      <div class="ev-side">
+        <span class="ev-time" title="${esc(dayTime(e.ts * 1000))}">${esc(fTime.format(e.ts * 1000))}</span>
+        ${url ? `<a class="open-link" href="${esc(url)}" target="_blank" rel="noopener" aria-label="Open in Moodle">${icon("out", 15)}</a>` : ""}
+      </div>
+    </li>`;
+  }
+  function feedCard() {
+    const feed = D.feed || [];
+    const counts = Object.fromEntries(CATS.map((c) => [c.id, feed.filter((e) => e.cat === c.id).length]));
+    const list = state.filter === "all" ? feed : feed.filter((e) => e.cat === state.filter);
+    const LIMIT = 14;
+    const visible = state.showAll ? list : list.slice(0, LIMIT);
+    let body = "", lastDay = null;
+    for (const e of visible) {
+      const k = dayKey(e.ts * 1000);
+      if (k !== lastDay) {
+        if (lastDay !== null) body += "</ul>";
+        body += `<div class="day">${esc(dayLabel(e.ts * 1000))}</div><ul class="feed">`;
+        lastDay = k;
+      }
+      body += feedItem(e);
+    }
+    if (lastDay !== null) body += "</ul>";
+    const chips = [`<button class="chip" data-filter="all" aria-pressed="${state.filter === "all"}">All <span class="n">${feed.length}</span></button>`]
+      .concat(CATS.map((c) => `<button class="chip" data-filter="${c.id}" aria-pressed="${state.filter === c.id}"><span class="sw" style="background:${c.color}"></span>${esc(c.label)} <span class="n">${counts[c.id]}</span></button>`))
+      .join("");
+    const more = list.length > LIMIT ? `<button class="more" data-action="more">${state.showAll ? "Show less" : `Show all ${list.length} updates`}</button>` : "";
+    return `<section class="card s8" style="--i:6" aria-labelledby="feed-h">
+      <div class="card-head"><div><h2 class="card-title" id="feed-h">What's new</h2>
+        <p class="card-sub">${plural(feed.length, "update")} from ${plural((D.runs || []).length, "robot report")} in your inbox · last ${D.windowDays || 7} days</p></div></div>
+      <div class="chips" role="group" aria-label="Filter updates">${chips}</div>
+      ${body || `<div class="empty">Nothing here this week.</div>`}
+      ${more}
+    </section>`;
+  }
+
+  // ---------- side panels ----------
+  function upNextCard() {
+    const { upcoming, overdue, anytime } = prepActions();
+    const lastRun = (D.latestRun.finishedTs || 0) * 1000;
+    const row = (a, kind) => {
+      const u = kind === "overdue" ? "crit" : urgency(a.dueMs);
+      const ic = kind === "overdue" ? icon("alert", 12, 2.6) : u === "neutral" ? icon("clock", 12, 2.2) : icon("alert", 12, 2.6);
+      const right = kind === "anytime"
+        ? `<div class="small">${esc(TODO_VERB[a.todo] || a.todo || "")}</div>`
+        : `<div class="big">${esc(kind === "overdue" ? span(now() - a.dueMs) + " ago" : "in " + span(a.dueMs - now()))}</div><div class="small">${esc(dayTime(a.dueMs))}</div>`;
+      const note = kind === "overdue" && !a.missed && a.dueMs > lastRun ? " · passed after last sync" : "";
+      const url = safeUrl(a.url);
+      const title = url ? `<a href="${esc(url)}" target="_blank" rel="noopener" style="text-decoration:none">${esc(a.item)}</a>` : esc(a.item);
+      return `<li class="row ${a.optional ? "dim" : ""}"><span class="status-ic ${kind === "anytime" ? "neutral" : u}">${ic}</span>
+        <div><div class="row-title">${title}${a.optional ? ' <span class="badge">optional</span>' : ""}</div>
+        <div class="row-meta">${courseHtml(a.course)}${esc(note)}</div></div>
+        <div class="row-right">${right}</div></li>`;
+    };
+    const group = (label, list, kind) => list.length
+      ? `<details class="group" data-group="${esc(kind + label)}"><summary><span>${esc(label)} · ${list.length}</span><span class="chev">${icon("chev", 14)}</span></summary><ul class="rows">${list.map((a) => row(a, kind)).join("")}</ul></details>` : "";
+    return `<section class="card" style="--i:7" aria-labelledby="next-h">
+      <div class="card-head"><div><h2 class="card-title" id="next-h">Up next</h2><p class="card-sub">Open to-dos from the latest run</p></div></div>
+      ${upcoming.length ? `<ul class="rows">${upcoming.slice(0, 6).map((a) => row(a, "next")).join("")}</ul>` : `<div class="empty">Nothing due. Enjoy it.</div>`}
+      ${group("More upcoming", upcoming.slice(6), "next")}
+      ${group("Past due", overdue, "overdue")}
+      ${group("No deadline", anytime, "anytime")}
+    </section>`;
+  }
+
+  function gradesCard() {
+    const grades = (D.grades || []).slice().sort((a, b) => b.ts - a.ts);
+    const rows = grades.slice(0, 5).map((g) => `<li class="row" style="grid-template-columns:22px minmax(0,1fr) auto">
+        <span class="status-ic good">${icon("star", 11, 2.4)}</span>
+        <div><div class="row-title">${esc(g.item)}</div><div class="row-meta">${courseHtml(g.course)}</div>
+        ${g.pct != null ? `<div class="gmeter"><span style="width:${clamp(g.pct, 0, 100)}%"></span></div>` : ""}</div>
+        <div class="row-right"><div class="big">${g.pct != null ? esc(Math.round(g.pct)) + "%" : esc(g.score || "")}</div><div class="small">${esc(fDay.format(g.ts * 1000))}</div></div></li>`).join("");
+    return `<section class="card" style="--i:8" aria-labelledby="grades-h">
+      <div class="card-head"><div><h2 class="card-title" id="grades-h">Fresh grades</h2><p class="card-sub">Released this week</p></div></div>
+      ${rows ? `<ul class="rows">${rows}</ul>` : `<div class="empty">No new grades this week.</div>`}
+    </section>`;
+  }
+
+  const INBOX_ICON = { due: "clock", submitted: "check", content: "file", signin: "shield", opens: "unlock", closes: "clock", digest: "calendar", other: "mail" };
+  const INBOX_LABEL = { due: "Due reminder", submitted: "Submission confirmed", content: "Course update", opens: "Opens", closes: "Closes", digest: "Weekly digest", other: "Moodle" };
+  function inboxCard() {
+    const inbox = D.inbox || [];
+    if (!inbox.length) return "";
+    const signins = inbox.filter((m) => m.kind === "signin");
+    const rest = inbox.filter((m) => m.kind !== "signin").slice(0, 6);
+    const rows = rest.map((m) => `<li class="row"><span class="status-ic neutral" style="width:22px;height:22px;border-radius:7px">${icon(INBOX_ICON[m.kind] || "mail", 13, 2)}</span>
+      <div><div class="row-title">${esc(m.title)}</div><div class="row-meta">${esc(INBOX_LABEL[m.kind] || "Moodle")}${m.when ? " · " + esc(m.when.replace(/^\w+day, /, "")) : ""}</div></div>
+      <div class="row-right"><div class="small">${m.ts ? esc(rel(m.ts * 1000)) : ""}</div></div></li>`).join("");
+    const sign = signins.length ? `<li class="row"><span class="status-ic neutral" style="width:22px;height:22px;border-radius:7px">${icon("shield", 13, 2)}</span>
+      <div><div class="row-title">${plural(signins.length, "sign-in alert")}</div><div class="row-meta">Security notices from Moodle, grouped</div></div>
+      <div class="row-right"><div class="small">latest ${esc(rel(signins[0].ts * 1000))}</div></div></li>` : "";
+    return `<section class="card" style="--i:9" aria-labelledby="inbox-h">
+      <div class="card-head"><div><h2 class="card-title" id="inbox-h">From your inbox</h2><p class="card-sub">${plural(inbox.length, "Moodle email")} in the last weeks</p></div><span style="color:var(--ink-2)">${icon("mail", 18)}</span></div>
+      <ul class="rows">${rows}${sign}</ul>
+    </section>`;
+  }
+
+  function chartCard(id, title, sub, extra, cls, i) {
+    return `<section class="card ${cls}" style="--i:${i}" aria-labelledby="${id}-h">
+      <div class="card-head"><div><h2 class="card-title" id="${id}-h">${esc(title)}</h2><p class="card-sub">${sub}</p></div>
+        <button class="ghost-btn" data-table="${id}" aria-pressed="${!!state.tables[id]}">${state.tables[id] ? "Chart" : "Table"}</button></div>
+      ${extra}
+      <div class="chart" data-chart="${id}"></div>
+    </section>`;
+  }
+
+  // ---------- page ----------
+  function greeting() {
+    const h = +fHour.format(now());
+    const part = h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+    return D.name ? `${part}, ${D.name}.` : `${part}.`;
+  }
+  function lede() {
+    const { required } = prepActions();
+    const week = required.filter((a) => a.dueMs - now() <= 7 * DAY).length;
+    const grades = (D.grades || []).length;
+    const feed = D.feed || [];
+    const touched = new Set(feed.map((e) => e.course)).size;
+    const parts = [
+      week ? `<b>${plural(week, "deadline")}</b> in the next 7 days` : `<b>no deadlines</b> in the next 7 days`,
+      grades ? `<b>${plural(grades, "new grade")}</b>` : null,
+      `<b>${plural(feed.length, "update")}</b> across <b>${plural(touched, "course")}</b> this week`,
+    ].filter(Boolean);
+    const s = parts.length > 2 ? `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}` : parts.join(" and ");
+    return s.charAt(0) === "<" ? s.replace(/^<b>(\w)/, (m, c) => `<b>${c.toUpperCase()}`) + "." : s + ".";
+  }
+
+  function heroCard() {
+    const { required, upcoming } = prepActions();
+    const next = required[0] || upcoming[0];
+    if (!next) {
+      return `<section class="card hero s5" style="--i:1"><div class="eyebrow"><span class="dot"></span>Next deadline</div>
+        <div class="countdown"><span class="num">All clear</span></div><div class="hero-meta">No open deadlines in Moodle right now.</div></section>`;
+    }
+    const u = urgency(next.dueMs);
+    const window = next.opensMs && next.opensMs < next.dueMs ? clamp((now() - next.opensMs) / (next.dueMs - next.opensMs), 0, 1) : null;
+    const meterCls = window == null ? "" : window > 0.9 ? "crit" : window > 0.75 ? "warn" : "";
+    const url = safeUrl(next.url);
+    return `<section class="card hero s5 ${u}" style="--i:1" aria-labelledby="hero-h">
+      <div class="eyebrow" id="hero-h"><span class="dot ${u === "neutral" ? "" : u}"></span>Next deadline</div>
+      <div class="countdown" id="countdown" data-due="${next.dueMs}" aria-live="off">${countdownHtml(next.dueMs)}</div>
+      <div class="hero-item">${esc(next.item)}</div>
+      <div class="hero-meta">${courseHtml(next.course)} · ${esc(dayTime(next.dueMs))}</div>
+      ${window != null ? `<div class="meter ${meterCls}" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(window * 100)}" aria-label="Share of the submission window used"><span style="width:${(window * 100).toFixed(1)}%"></span></div>
+      <div class="meter-cap">${Math.round(window * 100)}% of the submission window has passed</div>` : ""}
+      <div class="hero-foot">${url ? `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Open in Moodle ${icon("out", 14, 2)}</a>` : ""}
+        ${TODO_VERB[next.todo] ? `<span class="todo-tag">${icon("check", 15)}To do: ${esc(TODO_VERB[next.todo].toLowerCase())}</span>` : ""}</div>
+    </section>`;
+  }
+  function countdownHtml(dueMs) {
+    let s = Math.max(0, Math.floor((dueMs - now()) / 1000));
+    const d = Math.floor(s / 86400); s -= d * 86400;
+    const h = Math.floor(s / 3600); s -= h * 3600;
+    const m = Math.floor(s / 60); s -= m * 60;
+    const seg = (n, u, cls = "") => `<span class="seg ${cls}"><span class="num">${n}</span><span class="unit">${u}</span></span>`;
+    return (d ? seg(d, "d") : "") + seg(h, "h") + seg(String(m).padStart(d || h ? 2 : 1, "0"), "m") + seg(String(s).padStart(2, "0"), "s", "sec");
+  }
+
+  function tiles() {
+    const { required, upcoming, overdue, anytime, rows } = prepActions();
+    const week = required.filter((a) => a.dueMs - now() <= 7 * DAY);
+    const optWeek = upcoming.filter((a) => a.optional && a.dueMs - now() <= 7 * DAY).length;
+    const { totals } = activityData();
+    const grades = D.grades || [];
+    const avg = grades.filter((g) => g.pct != null);
+    const avgPct = avg.length ? Math.round(avg.reduce((s, g) => s + g.pct, 0) / avg.length) : null;
+    const tile = (i, label, value, delta, extra = "") => `<section class="card tile" style="--i:${i}">
+      <div class="tile-label">${label}</div><div class="tile-value" data-count="${value}">${value}</div>
+      <div class="tile-delta">${delta}</div>${extra}</section>`;
+    return [
+      tile(2, "Due in 7 days", week.length,
+        week.length ? `next ${esc(rel(week[0].dueMs))}${optWeek ? ` · +${optWeek} optional` : ""}` : optWeek ? `${optWeek} optional only` : "nothing required"),
+      tile(3, "Updates this week", (D.feed || []).length, `${plural(totals[totals.length - 1], "update")} today`, sparkline(totals)),
+      tile(4, "New grades", grades.length,
+        avgPct != null ? `<span class="status-ic good">${icon("star", 10, 2.6)}</span> average <b>${avgPct}%</b>` : "none released yet"),
+      tile(5, "Open to-dos", rows.length,
+        `${overdue.length ? `<span class="status-ic crit">${icon("alert", 10, 3)}</span><b>${overdue.length}</b> past due · ` : ""}${anytime.length} without deadline`),
+    ].join("");
+  }
+
+  function header() {
+    const r = D.latestRun || {};
+    const age = now() - (r.finishedTs || 0) * 1000;
+    const stale = age > 36 * 3600 * 1000;
+    const c = r.counts || {};
+    return `<header class="top">
+      <div class="brand"><span class="logo">${icon("bot", 22, 1.8)}</span>
+        <div><div class="brand-name">Moodle Robot</div><div class="brand-sub">Watching ${plural(c.courses || Object.keys(D.courses || {}).length, "course")}${c.items ? ` · ${c.items} activities` : ""}</div></div></div>
+      <div class="top-right">
+        <span class="pill privacy-flag">${icon("eyeOff", 14)} Privacy on</span>
+        <span class="pill" title="${esc(r.runId || "")}"><span class="dot ${stale ? "warn" : r.status === "OK" ? "" : "crit"}"></span>Last run <strong>${esc(span(age))} ago</strong> · ${esc(r.mode || "")} · ${esc(r.status || "")}</span>
+        <span class="pill clock" id="clock">${esc(dayTime(now()))}</span>
+        <button class="icon-btn" data-action="privacy" aria-pressed="${state.privacy}" title="Privacy mode: hide other students' names (P)">${icon(state.privacy ? "eyeOff" : "eye", 16)}</button>
+        <button class="icon-btn" data-action="theme" title="Switch theme (T)">${icon(isDark() ? "sun" : "moon", 16)}</button>
+      </div>
+    </header>`;
+  }
+  const isDark = () => {
+    const t = document.documentElement.dataset.theme;
+    return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+
+  function render() {
+    if (!D) return renderSetup();
+    document.body.classList.toggle("privacy", state.privacy);
+    const f = D.filtered || {};
+    const runs = D.runs || [];
+    const avgDur = runs.length ? Math.round(runs.reduce((s, r) => s + ((r.finishedTs || 0) - (r.startedTs || 0)), 0) / runs.length) : 0;
+    const errors = runs.reduce((s, r) => s + (r.errors || 0), 0);
+    const scrollY = window.scrollY;
+    const openGroups = new Set([...app.querySelectorAll("details[open]")].map((d) => d.dataset.group));
+    app.innerHTML = `
+      ${header()}
+      <section class="hello" style="--i:0"><h1>${esc(greeting())}</h1><p class="lede">${lede()}</p></section>
+      <div class="grid">${heroCard()}<div class="tiles s7">${tiles()}</div></div>
+      <div class="grid">
+        ${feedCard()}
+        <div class="s4 stack">${upNextCard()}${gradesCard()}${inboxCard()}</div>
+      </div>
+      <div class="grid">
+        ${chartCard("activity", "Activity this week", "Updates per day, by type", `<div class="legend">${CATS.map((c) => `<span><i style="background:${c.color}"></i>${esc(c.label)}</span>`).join("")}</div>`, "s6", 10)}
+        ${chartCard("runway", "Deadline runway", "Every open deadline from now on", `<div class="legend"><span><i class="ring" style="background:var(--crit)"></i>Due within 24 h</span><span><i class="ring" style="background:var(--warn)"></i>Within 3 days</span><span><i class="ring" style="background:var(--accent)"></i>Later</span><span><i class="hollow" style="--c:var(--ink-2)"></i>Optional</span></div>`, "s6", 11)}
+      </div>
+      <div class="grid">
+        ${chartCard("courses", "Busiest courses", "Where the updates came from this week", "", "s5", 12)}
+        ${chartCard("runs", "Robot runs", "Every run mails a report; the noise never reaches you",
+          `<div class="stats"><span><b>${runs.length}</b> runs</span><span><b>${errors}</b> ${errors === 1 ? "error" : "errors"}</span><span>avg <b>${avgDur} s</b></span><span><b>${f.raw ?? "–"}</b> raw changes → <b>${f.noise ?? "–"}</b> filtered</span></div>
+           <div class="legend"><span><i style="background:var(--accent)"></i>Kept</span><span><i style="background:var(--muted-mark)"></i>Filtered as noise</span></div>`, "s7", 13)}
+      </div>
+      <footer class="foot">
+        <span>Built from ${plural(runs.length, "Moodle Robot report")}${D.source === "gmail" ? " in your Gmail" : ""} · synced ${esc(dayTime((D.generatedTs || 0) * 1000))} · times in ${esc(TZ)}</span>
+        <span><kbd>P</kbd> privacy · <kbd>T</kbd> theme</span>
+      </footer>`;
+    for (const d of app.querySelectorAll("details[data-group]")) if (openGroups.has(d.dataset.group)) d.open = true;
+    drawCharts();
+    window.scrollTo(0, scrollY);
+  }
+
+  function renderSetup() {
+    app.innerHTML = `<section class="card setup"><div class="brand" style="margin-bottom:16px"><span class="logo">${icon("bot", 22, 1.8)}</span><div><div class="brand-name">Moodle Robot dashboard</div><div class="brand-sub">No data yet</div></div></div>
+      <p>This page reads the reports your Moodle Robot mails you. Build its data file first:</p>
+      <ol><li>Create a Gmail app password (Google Account → Security → App passwords).</li>
+      <li>Run <code class="inline">GMAIL_USER=you@gmail.com GMAIL_APP_PASSWORD=… python3 dashboard/sync.py --name YourName</code></li>
+      <li>Reload this page.</li></ol>
+      <p style="color:var(--ink-2)">Details are in <code class="inline">dashboard/README.md</code>.</p></section>`;
+  }
+
+  // count-up on first paint: nice on camera, skipped for reduced motion
+  function countUp() {
+    if (reduceMotion) return;
+    const els = [...app.querySelectorAll("[data-count]")];
+    const t1 = performance.now();
+    const step = (t) => {
+      const k = clamp((t - t1) / 900, 0, 1), e = 1 - Math.pow(1 - k, 3);
+      for (const el of els) el.textContent = Math.round(+el.dataset.count * e);
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  function tick() {
+    const cd = document.getElementById("countdown");
+    if (cd) cd.innerHTML = countdownHtml(+cd.dataset.due);
+    const clock = document.getElementById("clock");
+    if (clock) clock.textContent = dayTime(now());
+  }
+
+  // ---------- events ----------
+  app.addEventListener("click", (ev) => {
+    const b = ev.target.closest("button");
+    if (!b) return;
+    if (b.dataset.filter) { state.filter = b.dataset.filter; state.showAll = false; render(); }
+    else if (b.dataset.table) { state.tables[b.dataset.table] = !state.tables[b.dataset.table]; render(); }
+    else if (b.dataset.action === "more") { state.showAll = !state.showAll; render(); }
+    else if (b.dataset.action === "privacy") togglePrivacy();
+    else if (b.dataset.action === "theme") toggleTheme();
+  });
+  function togglePrivacy() { state.privacy = !state.privacy; store.set("privacy", state.privacy ? "1" : "0"); render(); }
+  function toggleTheme() {
+    const next = isDark() ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    store.set("theme", next);
+    render();
+  }
+  document.addEventListener("keydown", (ev) => {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey || /input|textarea|select/i.test(ev.target.tagName)) return;
+    if (ev.key === "p" || ev.key === "P") togglePrivacy();
+    if (ev.key === "t" || ev.key === "T") toggleTheme();
+  });
+  let resizeTimer;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawCharts, 120); });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+
+  app.classList.add("intro");
+  render();
+  if (D) {
+    countUp();
+    setTimeout(() => app.classList.remove("intro"), 1600);
+    setInterval(tick, 1000);
+    setInterval(render, 60000); // relative times, urgency colours, "past due" moves
+  }
+})();
+</script>
+</body>
+</html>

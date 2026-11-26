@@ -1,0 +1,5 @@
+# Your Moodle data stays on your machine
+data.js
+reports/
+out/
+__pycache__/
